@@ -90,11 +90,16 @@ traces, `group` is a genuine **operational** field (model, service type, tenant)
              Quality-of-Service Disparities in Serving Systems},
   author  = {Rai, Akhilesh and Bandopadhyay, Sarthak Saptarshi and Chanda, Manash},
   year    = {2026},
-  note    = {Preprint}
+  note    = {Preprint. Code: https://github.com/raitheone-svg/tail-latency-equity}
 }
 ```
 
-## License
+## License and data credits
 
-Code: MIT (see `LICENSE`). Datasets downloaded separately keep their own
-licenses (BurstGPT and the Azure Public Dataset are CC-BY-4.0).
+Code: MIT, © 2026 Akhilesh Rai, Sarthak Saptarshi Bandopadhyay, Manash Chanda
+(see `LICENSE`).
+
+The datasets are **not redistributed here** (they are git-ignored and downloaded
+separately) and keep their own licenses. BurstGPT and the Azure Public Dataset
+are both CC-BY-4.0; full credits, citations, and license notices are in
+[`ATTRIBUTION.md`](ATTRIBUTION.md).
