@@ -18,6 +18,19 @@ def quantile(x, p):
     return float(np.quantile(x, p))
 
 
+def bootstrap_ci(stat_fn, n, n_boot=200, alpha=0.05, seed=0):
+    """Percentile bootstrap confidence interval.
+
+    stat_fn(idx) returns the statistic computed on resampled row indices idx.
+    Returns (lo, hi) for the central (1 - alpha) interval.
+    """
+    rng = np.random.default_rng(seed)
+    vals = np.empty(n_boot)
+    for b in range(n_boot):
+        vals[b] = stat_fn(rng.integers(0, n, n))
+    return float(np.quantile(vals, alpha / 2)), float(np.quantile(vals, 1 - alpha / 2))
+
+
 def group_quantiles(resp, group, p):
     """p-quantile per group, as a dict {group_label: value}."""
     return {g: quantile(resp[group == g], p) for g in np.unique(group)}

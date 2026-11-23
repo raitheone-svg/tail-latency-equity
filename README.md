@@ -55,9 +55,9 @@ curl -L -o BurstGPT_without_fails_3.csv \
   https://github.com/HPMLL/BurstGPT/releases/download/v2.0/BurstGPT_without_fails_3.csv
 cd ..
 
-# compute the quantile-fairness metrics on REAL measured latency
-python run_burstgpt.py --csv data/BurstGPT_without_fails_3.csv --real-latency --cohort model
-python run_burstgpt.py --csv data/BurstGPT_without_fails_3.csv --real-latency --cohort logtype
+# compute the quantile-fairness metrics on REAL measured latency (with 95% CIs)
+python run_burstgpt.py --csv data/BurstGPT_without_fails_3.csv --real-latency --cohort model   --n-boot 200
+python run_burstgpt.py --csv data/BurstGPT_without_fails_3.csv --real-latency --cohort logtype --n-boot 200
 ```
 
 Result on 2,161,220 real requests (observed `Elapsed time`):
@@ -67,11 +67,15 @@ Result on 2,161,220 real requests (observed `Elapsed time`):
 | GPT-4 vs ChatGPT     | 2.76×        | 48 s  | 68 s  | 20 s | 1.42× | −5.4 s                |
 | Conversation vs API  | 1.65×        | 49 s  | 58 s  | 9 s  | 1.18× | −7.3 s                |
 
-The raw tail gaps are real, but the workload-conditioned decomposition shows
-they are explained by request-size composition, not per-request scheduling bias
-(the adjusted gap is slightly negative). Paired with the synthetic experiment —
-the controlled case where scheduling *is* the cause — the metric is validated in
-both regimes.
+The raw tail gaps are real and tightly estimated (95% bootstrap CIs with
+`--n-boot 200`: gap 20 s [19, 21] and 9 s [8, 10]). The workload-conditioned
+decomposition attributes them to request-size composition, not per-request
+scheduling bias (adjusted gap −5.4 s [−6.2, −4.7] and −7.3 s [−8.5, −5.7], both
+excluding zero). A real unequal-service effect still appears at a strict SLO —
+GPT-4 users miss a tight p90 target 5.1 points more often — which, being
+workload-driven, calls for per-group SLOs or capacity rather than scheduler
+debiasing. Paired with the synthetic experiment (the controlled case where
+scheduling *is* the cause), the metric is validated in both regimes.
 
 See [docs/DATA.md](docs/DATA.md) for all datasets and licenses, and
 [docs/PUBLISHING.md](docs/PUBLISHING.md) for framing.

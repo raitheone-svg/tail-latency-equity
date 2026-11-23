@@ -101,13 +101,13 @@ def load_burstgpt(csv_path, cohort="model", cost="total", max_requests=None):
     return arrival[order], size[order], group[order]
 
 
-def load_burstgpt_latency(csv_path, cohort="model", size_col="total", max_requests=None):
+def load_burstgpt_latency(csv_path, cohort="model", max_requests=None):
     """Load BurstGPT with its REAL measured end-to-end latency.
 
-    Requires a v2.0-format file (e.g. BurstGPT_without_fails_3.csv) that has an
-    'Elapsed time' column. Returns (elapsed, size, group), where elapsed is the
-    observed latency in seconds, size is the token-based workload used for the
-    workload-conditioned decomposition, and group is a real trace cohort.
+    Requires a v2.0-format file (e.g. BurstGPT_without_fails_3.csv) with an
+    'Elapsed time' column. Returns (elapsed, total, request, response, group):
+    the observed latency in seconds, total/request/response token counts (for
+    workload conditioning on different cost proxies), and a real trace cohort.
 
     This is the simulation-free path: the fairness metrics are computed on
     latencies actually observed in Azure OpenAI production serving.
@@ -121,12 +121,11 @@ def load_burstgpt_latency(csv_path, cohort="model", size_col="total", max_reques
     if max_requests:
         df = df.iloc[:int(max_requests)]
     elapsed = df["Elapsed time"].to_numpy(dtype=float)
-    if size_col == "response":
-        size = df["Response tokens"].to_numpy(dtype=float)
-    else:
-        size = df["Total tokens"].to_numpy(dtype=float)
+    total = df["Total tokens"].to_numpy(dtype=float)
+    request = df["Request tokens"].to_numpy(dtype=float)
+    response = df["Response tokens"].to_numpy(dtype=float)
     if cohort == "logtype":
         group = np.where(df["Log Type"].to_numpy() == "Conversation log", "B", "A")
     else:
         group = np.where(df["Model"].to_numpy() == "GPT-4", "B", "A")
-    return elapsed, size, group
+    return elapsed, total, request, response, group
