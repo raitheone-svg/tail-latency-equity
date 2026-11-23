@@ -71,7 +71,8 @@ def main():
     print(f"  SLO-viol disparity : {100*(v['B']-v['A']):.1f} pct. points")
     print(f"  raw gap            : {wc['raw']:.3f}")
     print(f"  workload-adjusted  : {wc['adjusted']:.3f}  "
-          f"(scheduling-induced share: {100*(1-wc['composition_share']):.0f}%)")
+          f"(scheduling-induced share: {100*(1-wc['composition_share']):.0f}%, "
+          f"bins used: {wc['bins_used']}/{wc['bins_total']})")
     print("\nNote: 'group' is a neutral operational cohort, not a demographic "
           "attribute. Document your cohort choice in any publication.")
 

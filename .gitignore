@@ -9,11 +9,9 @@ venv/
 results/metrics.json
 results/figs/*.png
 
-# Downloaded datasets (large; fetch with scripts/download_data.sh)
-data/*.csv
-data/*.csv.gz
-data/*.parquet
-data/raw/
+# Downloaded datasets and cloned dataset repos (large; fetch per docs/DATA.md)
+/data/*
+!/data/README.md
 
 # OS / editor
 .DS_Store

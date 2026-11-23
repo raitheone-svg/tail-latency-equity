@@ -53,35 +53,54 @@ def slo_violation_disparity(resp, group, T, g_hi, g_lo):
     return r[g_hi] - r[g_lo]
 
 
-def workload_conditioned_gap(resp, group, size, p, g_hi, g_lo, n_bins=3):
+def workload_conditioned_gap(resp, group, size, p, g_hi, g_lo,
+                             n_bins=3, min_count=50):
     """Direct-standardization decomposition of the p-quantile parity gap.
 
     Splits requests into n_bins service-demand bins, computes each group's
-    p-quantile within each bin, and recombines using a single shared weight
-    per bin (the overall share of requests in that bin). The result separates:
+    p-quantile within each bin, and recombines using shared per-bin weights.
+    The result separates:
 
         raw          : Q_{g_hi}(p) - Q_{g_lo}(p) over all requests
         adjusted     : the same gap holding workload mix constant
                        (the SCHEDULING-INDUCED component)
         composition  : raw - adjusted (the WORKLOAD component)
 
-    Use finer bins when within-bin work must be more comparable.
+    A within-bin gap can only be measured where BOTH groups are present. Bins
+    where either group has fewer than `min_count` requests are skipped, and the
+    shared weights are renormalised over the bins actually used. This matters on
+    real traces, where cohort and workload can be strongly correlated and the
+    extreme size bins hold only one group. Use finer bins when within-bin work
+    must be more comparable.
     """
     edges = np.quantile(size, np.linspace(0.0, 1.0, n_bins + 1))
     edges[-1] = np.inf
     idx = np.digitize(size, edges[1:-1])
 
     adjusted = 0.0
+    used_w = 0.0
+    skipped = 0
     bins = []
     for b in range(n_bins):
         m = idx == b
         w = float(m.mean())
-        q_hi = quantile(resp[m & (group == g_hi)], p)
-        q_lo = quantile(resp[m & (group == g_lo)], p)
+        hi = resp[m & (group == g_hi)]
+        lo = resp[m & (group == g_lo)]
+        if len(hi) < min_count or len(lo) < min_count:
+            skipped += 1
+            bins.append({"bin": int(b), "weight": w, "gap": None,
+                         "hi": None, "lo": None, "skipped": True,
+                         "n_hi": int(len(hi)), "n_lo": int(len(lo))})
+            continue
+        q_hi = quantile(hi, p)
+        q_lo = quantile(lo, p)
         adjusted += w * (q_hi - q_lo)
-        bins.append({"bin": int(b), "weight": w,
-                     "gap": q_hi - q_lo, "hi": q_hi, "lo": q_lo})
+        used_w += w
+        bins.append({"bin": int(b), "weight": w, "gap": q_hi - q_lo,
+                     "hi": q_hi, "lo": q_lo, "skipped": False,
+                     "n_hi": int(len(hi)), "n_lo": int(len(lo))})
 
+    adjusted = adjusted / used_w if used_w > 0 else float("nan")
     raw = parity_gap(resp, group, p, g_hi, g_lo)
     return {
         "raw": raw,
@@ -89,4 +108,6 @@ def workload_conditioned_gap(resp, group, size, p, g_hi, g_lo, n_bins=3):
         "composition": raw - adjusted,
         "composition_share": (raw - adjusted) / raw if raw else float("nan"),
         "bins": bins,
+        "bins_used": n_bins - skipped,
+        "bins_total": n_bins,
     }

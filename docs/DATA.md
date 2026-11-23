@@ -24,6 +24,24 @@ cohort definition explicitly in the paper.
 
 ## Datasets
 
+### 0. BurstGPT — CC-BY-4.0 (used for the real-data validation)
+Repo: https://github.com/HPMLL/BurstGPT  (CC-BY-4.0)
+
+A real trace of Azure OpenAI serving. The v2.0 file
+`BurstGPT_without_fails_3.csv` has columns `Timestamp, Session ID, Elapsed time,
+Model, Request tokens, Response tokens, Total tokens, Log Type` — crucially a
+**real measured latency** (`Elapsed time`) and two real cohorts (`Model`:
+GPT-4 vs ChatGPT; `Log Type`: Conversation vs API). This is why it is the
+primary real-data validation: the fairness metrics are computed on observed
+latency, with no simulation. Download the v2.0 file from the releases page
+(`BurstGPT_1.csv`, the older v1 file committed in `/data`, lacks `Elapsed time`):
+
+```bash
+curl -L -o data/BurstGPT_without_fails_3.csv \
+  https://github.com/HPMLL/BurstGPT/releases/download/v2.0/BurstGPT_without_fails_3.csv
+python run_burstgpt.py --csv data/BurstGPT_without_fails_3.csv --real-latency --cohort model
+```
+
 ### 1. Azure Public Dataset — CC-BY-4.0 (recommended)
 Repo: https://github.com/Azure/AzurePublicDataset  (data CC-BY-4.0, code MIT)
 
